@@ -1,0 +1,44 @@
+{
+  "name": "minecraft-chunk-viewer",
+  "version": "0.0.0",
+  "description": "A deck.gl experiment",
+  "scripts": {
+    "link": "(mklink /d node_modules webpack\\node_modules)",
+    "serve": "webpack-dev-server --progress --hot --port 3000 --open --host 0.0.0.0",
+    "start": "",
+    "build-clean": "rimraf dist && mkdir dist",
+    "build-assets": "node scripts",
+    "build-copy": "xcopy /s /e static\\* dist",
+    "build-script": "webpack -p",
+    "build": "npm run build-clean && npm run build-assets && npm run build-script && npm run build-copy"
+  },
+  "author": "Xiaoji Chen <cxiaoji@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/polyfill": "7.0.0",
+    "@stomp/stompjs": "^7.0.0",
+    "deck.gl": "8.0.0",
+    "express": "^4.18.2",
+    "minecraft-region": "0.3.1",
+    "net": "^1.0.2",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-hammerjs": "1.0.1",
+    "websocket": "^1.0.34",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.9",
+    "@babel/plugin-proposal-class-properties": "7.0.0",
+    "@babel/preset-env": "7.0.0",
+    "@babel/preset-react": "7.0.0",
+    "babel-loader": "8.0.5",
+    "get-pixels": "^3.3.3",
+    "ndarray": "1.0.18",
+    "raw-loader": "^4.0.2",
+    "save-pixels": "^2.3.6",
+    "webpack": "^4.47.0",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.3"
+  }
+}
