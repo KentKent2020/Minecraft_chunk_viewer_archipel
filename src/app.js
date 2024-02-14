@@ -16,7 +16,7 @@ import About from './components/about';
 
 
 
-import {loadMCA, readChunks, REGION_FILE_PATTERN,
+import {loadMCA, readChunks, REGION_FILE_PATTERN, addChunkkent,
   getBlockTemperature, getBlockHumidity, isBlockOpaque} from './utils/mca-parser';
 
 const sampleFile = 'r.0.0.mca';
@@ -95,8 +95,8 @@ class Root extends Component {
             ws.send(JSON.stringify({
                 event: 'chunk',
                 datainput: {
-                  chunkx: 45,
-                  chunkz: 4541
+                  chunkx: 45, // Example
+                  chunkz: 4541 // Example
                 }
             }));
 
@@ -114,7 +114,18 @@ class Root extends Component {
 
         if(endmessage != null) {
           console.log("End");
+          for (let ytmp = 0; ytmp < 384; ytmp++) {
+            for (let ztmp = 0; ztmp < 15; ztmp++) {
+              for (let xtmp = 0; xtmp < 15; xtmp++) {
+                let index = xtmp + (ztmp * 16) + (ytmp * 16 * 16);
+                // addChunkkent(xtmp, ytmp, ztmp, selectionlist[0][data][index][block[opaque]]);
+                addChunkkent(xtmp, ytmp, ztmp, selectionlist[0].data[index].block.opaque);
+              }
+            }
+          }
+
           this.setState({selection:selectionlist[0], viewState:selectionlist[1]});
+          console.log(this.state);
         }
 
         const {bounds} = dataoutput;
@@ -224,10 +235,10 @@ class Root extends Component {
       console.log(this.state);
       // console.log(result);
 
-      // const {availableChunks} = result;
-      // const randomIndex = Math.floor(Math.random() * availableChunks.length);
+      const {availableChunks} = result;
+      const randomIndex = Math.floor(Math.random() * availableChunks.length);
 
-      // this._readChunks(result.availableChunks.slice(288, 288 + 1));
+      this._readChunks(result.availableChunks.slice(288, 288 + 1));
     }
   }
 
@@ -251,7 +262,7 @@ class Root extends Component {
       zoom: Math.log2(scale)
     };
 
-    this.setState({selection, viewState});
+    // this.setState({selection, viewState});
 
     console.log(this.state);
   }
@@ -325,6 +336,8 @@ class Root extends Component {
         onHover: this._onHoverBlock
       })
     ].filter(Boolean);
+
+    // console.log(layers);
 
     return (
       <div onDragOver={this._preventDefault} onDrop={this._handleFileDrop} >

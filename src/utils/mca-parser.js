@@ -25,6 +25,7 @@ export const REGION_FILE_PATTERN = /\.mca$/;
 export function loadMCA(filename, data) {
   try {
     region = minecraftRegion(data);
+
   } catch (error) {
     region = null;
     selection = null;
@@ -178,6 +179,7 @@ function removeChunk(chunkX, chunkZ) {
  */
 function addChunk(chunkX, chunkZ) {
   const chunk = region.getChunk(chunkX, chunkZ);
+  console.log(chunk);
 
   if (!chunk) {
     return;
@@ -188,11 +190,16 @@ function addChunk(chunkX, chunkZ) {
   const xOffset = xPos * 16;
   const zOffset = zPos * 16;
 
-  const chunkOccupancy = new Uint16Array(4096);
+  const chunkOccupancy = new Uint16Array(4096); // Deja ajouter quelque part
+
+  console.log(chunkOccupancy);
+
   if (!occupancy[xPos]) {
     occupancy[xPos] = {};
   }
+ 
   occupancy[xPos][zPos] = chunkOccupancy;
+
 
   for (const section of Sections) {
     const yOffset = section.Y * 16;
@@ -201,8 +208,10 @@ function addChunk(chunkX, chunkZ) {
       let blockId = section.Blocks[i];
       if (section.Add) {
         blockId += (get4BitData(section.Add, i) << 8);
+
       }
       const blockData = get4BitData(section.Data, i);
+      
       const lighting = Math.min(
         get4BitData(section.BlockLight, i) + get4BitData(section.SkyLight, i),
         0xf
@@ -223,6 +232,7 @@ function addChunk(chunkX, chunkZ) {
       const z = (i >> 4) & 0xf;
       const biome = biomeInfos[biomes[i % 256]] || biomeInfos.default;
       chunkOccupancy[(y << 4) + z] |= (meta.opaque << x);
+
 
       const b = {
         position: [x + xOffset, y, z + zOffset],
@@ -247,6 +257,17 @@ function addChunk(chunkX, chunkZ) {
   }
 }
 
+
+
+
+export function addChunkkent(x, y, z, opaque) {
+  const chunkOccupancy = new Uint16Array(4096);
+  chunkOccupancy[(y << 4) + z] |= (opaque << x);
+
+  
+}
+
+
 function get4BitData(uint8Arr, index) {
   if (!(index % 2)) {
     // lower 4 bits
@@ -264,6 +285,7 @@ export function isBlockOpaque(x, y, z) {
   if (chunkOccupancy) {
 
     return chunkOccupancy[y * 16 + (z - (posZ << 4))] & (1 << (x - (posX << 4)));
+    
   }
   return 0;
 }
