@@ -1,6 +1,6 @@
-import minecraftRegion from 'minecraft-region';
-import blockInfos from '../constants/blocks';
-import biomeInfos from '../constants/biomes';
+import minecraftRegion from "minecraft-region";
+import blockInfos from "../constants/blocks";
+import biomeInfos from "../constants/biomes";
 
 /*
  * Level format reference:
@@ -25,11 +25,10 @@ export const REGION_FILE_PATTERN = /\.mca$/;
 export function loadMCA(filename, data) {
   try {
     region = minecraftRegion(data);
-
   } catch (error) {
     region = null;
     selection = null;
-    return {error}
+    return { error };
   }
 
   const availableChunks = [];
@@ -59,7 +58,7 @@ export function loadMCA(filename, data) {
 
   return {
     availableChunks,
-    heightMap
+    heightMap,
   };
 }
 
@@ -67,10 +66,10 @@ function resetBuffers() {
   selection = {
     chunks: [],
     data: [],
-    blockCount: 0
+    blockCount: 0,
   };
   // sort by accending Y
-  yBuffer = (new Array(256).fill(0)).map(d => []);
+  yBuffer = new Array(256).fill(0).map((d) => []);
   occupancy = {};
 }
 
@@ -91,8 +90,11 @@ export function readChunks(chunks) {
   let needsUpdate = false;
   let counter = 0;
 
-  const shouldCleanHouse = selection.chunks.length && 
-    selection.chunks.every(([chunkX, chunkZ]) => findChunkIndex(chunks, chunkX, chunkZ) < 0);
+  const shouldCleanHouse =
+    selection.chunks.length &&
+    selection.chunks.every(
+      ([chunkX, chunkZ]) => findChunkIndex(chunks, chunkX, chunkZ) < 0
+    );
 
   if (shouldCleanHouse) {
     resetBuffers();
@@ -143,7 +145,7 @@ export function readChunks(chunks) {
     chunks,
     data,
     blockCount: counter,
-    bounds: counter ? {minX, minY, minZ, maxX, maxY, maxZ} : null
+    bounds: counter ? { minX, minY, minZ, maxX, maxY, maxZ } : null,
   };
 
   return selection;
@@ -159,15 +161,17 @@ function removeChunk(chunkX, chunkZ) {
     return;
   }
 
-  const {xPos, zPos} = chunk.root.Level;
+  const { xPos, zPos } = chunk.root.Level;
   const xOffset = xPos * 16;
   const zOffset = zPos * 16;
 
   for (let y = 0; y < yBuffer.length; y++) {
-    yBuffer[y] = yBuffer[y].filter(b => {
+    yBuffer[y] = yBuffer[y].filter((b) => {
       const x = b.position[0];
       const z = b.position[2];
-      return x < xOffset || x >= xOffset + 16 || z < zOffset || z >= zOffset + 16;
+      return (
+        x < xOffset || x >= xOffset + 16 || z < zOffset || z >= zOffset + 16
+      );
     });
   }
 
@@ -185,21 +189,18 @@ function addChunk(chunkX, chunkZ) {
     return;
   }
 
-  const {xPos, zPos, Sections, Biomes} = chunk.root.Level;
-  const biomes = Biomes || (new Uint8Array(256)).fill(4);
+  const { xPos, zPos, Sections, Biomes } = chunk.root.Level;
+  const biomes = Biomes || new Uint8Array(256).fill(4);
   const xOffset = xPos * 16;
   const zOffset = zPos * 16;
 
   const chunkOccupancy = new Uint16Array(4096); // Deja ajouter quelque part
 
-  console.log(chunkOccupancy);
-
   if (!occupancy[xPos]) {
     occupancy[xPos] = {};
   }
- 
-  occupancy[xPos][zPos] = chunkOccupancy;
 
+  occupancy[xPos][zPos] = chunkOccupancy;
 
   for (const section of Sections) {
     const yOffset = section.Y * 16;
@@ -207,11 +208,10 @@ function addChunk(chunkX, chunkZ) {
     for (let i = 0; i < SECTION_SIZE; i++) {
       let blockId = section.Blocks[i];
       if (section.Add) {
-        blockId += (get4BitData(section.Add, i) << 8);
-
+        blockId += get4BitData(section.Add, i) << 8;
       }
       const blockData = get4BitData(section.Data, i);
-      
+
       const lighting = Math.min(
         get4BitData(section.BlockLight, i) + get4BitData(section.SkyLight, i),
         0xf
@@ -231,8 +231,7 @@ function addChunk(chunkX, chunkZ) {
       const y = (i >> 8) + yOffset;
       const z = (i >> 4) & 0xf;
       const biome = biomeInfos[biomes[i % 256]] || biomeInfos.default;
-      chunkOccupancy[(y << 4) + z] |= (meta.opaque << x);
-
+      chunkOccupancy[(y << 4) + z] |= meta.opaque << x;
 
       const b = {
         position: [x + xOffset, y, z + zOffset],
@@ -240,33 +239,50 @@ function addChunk(chunkX, chunkZ) {
         biome,
         blockId,
         blockData,
-        lighting
+        lighting,
       };
 
       yBuffer[y].push(b);
 
-      if (meta.model === 'stairs') {
+      if (meta.model === "stairs") {
         // hack for stairs model
         yBuffer[y].push({
           ...b,
           parent: b,
-          blockData: blockData + 8
+          blockData: blockData + 8,
         });
       }
     }
   }
 }
 
+export function addChunkkent(selectionlist) {
+  // A different version of addChunk but not with a .mca file/Culling
 
-
-
-export function addChunkkent(x, y, z, opaque) {
   const chunkOccupancy = new Uint16Array(4096);
-  chunkOccupancy[(y << 4) + z] |= (opaque << x);
+  for (let ytmp = 0; ytmp < selectionlist.bounds.maxY + 1; ytmp++) {
+    for (let ztmp = 0; ztmp < 16; ztmp++) {
+      for (let xtmp = 0; xtmp < 16; xtmp++) {
+        let index = xtmp + ztmp * 16 + ytmp * 16 * 16;
+        chunkOccupancy[(ytmp << 4) + ztmp] |=
+          selectionlist.data[index].block.opaque << xtmp; // Set opaque of all block in chunkOccupancy
+      }
+    }
+  }
 
-  
+  let chunk_x = selectionlist.chunks[selectionlist.chunks.length - 1][0];
+  let chunk_z = selectionlist.chunks[selectionlist.chunks.length - 1][1];
+
+  if (!occupancy[chunk_x]) {
+    occupancy[chunk_x] = {};
+  }
+
+  if (!occupancy[chunk_x][chunk_z]) {
+    occupancy[chunk_x][chunk_z] = {};
+  }
+
+  occupancy[chunk_x][chunk_z] = chunkOccupancy;
 }
-
 
 function get4BitData(uint8Arr, index) {
   if (!(index % 2)) {
@@ -280,23 +296,22 @@ function get4BitData(uint8Arr, index) {
 export function isBlockOpaque(x, y, z) {
   const posX = x >> 4;
   const posZ = z >> 4;
-  
+
   const chunkOccupancy = occupancy[posX] && occupancy[posX][posZ];
   if (chunkOccupancy) {
-
-    return chunkOccupancy[y * 16 + (z - (posZ << 4))] & (1 << (x - (posX << 4)));
-    
+    return (
+      chunkOccupancy[y * 16 + (z - (posZ << 4))] & (1 << (x - (posX << 4)))
+    );
   }
   return 0;
 }
 
 export function getBlockMetadata(id, data) {
-  return blockInfos[`${id}:${data}`] ||
-    blockInfos[`${id}:${0}`];
+  return blockInfos[`${id}:${data}`] || blockInfos[`${id}:${0}`];
 }
 
 export function findChunkIndex(arr, x, z) {
-  return arr.findIndex(c => c[0] === x && c[1] === z);
+  return arr.findIndex((c) => c[0] === x && c[1] === z);
 }
 
 export function getBlockTemperature(block) {
