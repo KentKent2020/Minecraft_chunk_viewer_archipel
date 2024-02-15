@@ -259,13 +259,19 @@ function addChunk(chunkX, chunkZ) {
 export function addChunkkent(selectionlist) {
   // A different version of addChunk but not with a .mca file/Culling
 
+
+
   const chunkOccupancy = new Uint16Array(4096);
   for (let ytmp = 0; ytmp < selectionlist.bounds.maxY + 1; ytmp++) {
     for (let ztmp = 0; ztmp < 16; ztmp++) {
       for (let xtmp = 0; xtmp < 16; xtmp++) {
         let index = xtmp + ztmp * 16 + ytmp * 16 * 16;
-        chunkOccupancy[(ytmp << 4) + ztmp] |=
-          selectionlist.data[index].block.opaque << xtmp; // Set opaque of all block in chunkOccupancy
+        
+        let opaqueofblock = selectionlist.data[index];
+        if(!opaqueofblock) {
+          continue; // Air
+        }
+        chunkOccupancy[(ytmp << 4) + ztmp] |= opaqueofblock.block.opaque << xtmp; // Set opaque of all block in chunkOccupancy
       }
     }
   }
